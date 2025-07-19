@@ -1,0 +1,21 @@
+Subtrai-se 1 do número n.
+
+Subtrai-se n de 10.
+
+O resultado da multiplicação será formado pelos dois valores obtidos:
+
+O primeiro será multiplicado por 10 (posição da dezena).
+
+O segundo é somado ao resultado.
+
+Por exemplo:
+
+Se n = 6:
+
+n - 1 = 5
+
+10 - n = 4
+
+Resultado final: 5 x 10 + 4 = 54
+
+Portanto, 9 × 6 = 54
