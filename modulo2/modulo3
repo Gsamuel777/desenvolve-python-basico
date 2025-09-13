@@ -1,1 +1,63 @@
+# ======================================================
+# Módulo 3 - Condicionais
+# Aula 3.2 - Relacionais e Lógicas - Exercícios
+# ======================================================
+
+# -------- Questão 1 --------
+print("\n--- Questão 1 ---")
+idade_juliana = int(input("Digite a idade de Juliana: "))
+idade_cris = int(input("Digite a idade de Cris: "))
+pode_entrar_q1 = idade_juliana > 17 and idade_cris > 17
+print("Pode entrar no bar (ambos maiores de 17):", pode_entrar_q1)
+
+
+# -------- Questão 2 --------
+print("\n--- Questão 2 ---")
+idade_juliana = int(input("Digite a idade de Juliana: "))
+idade_cris = int(input("Digite a idade de Cris: "))
+pode_entrar_q2 = idade_juliana > 17 or idade_cris > 17
+print("Pode entrar no bar (pelo menos um maior de 17):", pode_entrar_q2)
+
+
+# -------- Questão 3 --------
+print("\n--- Questão 3 ---")
+idade = int(input("Digite sua idade: "))
+jogou_3 = input("Já jogou pelo menos 3 jogos de tabuleiro? (True/False): ") == "True"
+vitorias = int(input("Quantos jogos já venceu? "))
+apto = (16 <= idade <= 18) and jogou_3 and (vitorias >= 1)
+print("Apto para ingressar no clube de jogos de tabuleiro:", apto)
+
+
+# -------- Questão 4 --------
+print("\n--- Questão 4 ---")
+classe = input("Escolha a classe (guerreiro, mago ou arqueiro): ").lower()
+forca = int(input("Digite os pontos de força (de 1 a 20): "))
+magia = int(input("Digite os pontos de magia (de 1 a 20): "))
+
+if classe == "guerreiro":
+    valido = forca >= 15 and magia <= 10
+elif classe == "mago":
+    valido = forca <= 10 and magia >= 15
+elif classe == "arqueiro":
+    valido = forca > 5 and magia > 5 and forca <= 15 and magia <= 15
+else:
+    valido = False
+
+print("Pontos de atributo consistentes com a classe escolhida:", valido)
+
+
+# -------- Questão 5 --------
+print("\n--- Questão 5 ---")
+genero = input("Digite seu gênero (M ou F): ").upper()
+idade = int(input("Digite sua idade: "))
+tempo_servico = int(input("Digite seu tempo de serviço (em anos): "))
+
+if genero == "F":
+    pode_aposentar = idade > 60 or tempo_servico >= 30 or (idade >= 60 and tempo_servico >= 25)
+elif genero == "M":
+    pode_aposentar = idade > 65 or tempo_servico >= 30 or (idade >= 60 and tempo_servico >= 25)
+else:
+    pode_aposentar = False
+
+print("Pode aposentar:", pode_aposentar)
 
