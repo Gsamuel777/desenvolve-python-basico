@@ -1,0 +1,70 @@
+# ==============================
+# 1️⃣ SOMA PAR OU ÍMPAR
+# ==============================
+
+num1 = int(input("Digite o primeiro número: "))
+num2 = int(input("Digite o segundo número: "))
+
+soma = num1 + num2
+
+if soma % 2 == 0:
+    print("A soma é PAR.")
+else:
+    print("A soma é ÍMPAR.")
+
+print("-" * 40)
+
+# ==============================
+# 2️⃣ SISTEMA DE CLASSIFICAÇÃO DE FILMES
+# ==============================
+
+avaliacao = int(input("Digite a avaliação do filme (1 a 5): "))
+
+if avaliacao == 5:
+    print("Excelente!")
+elif avaliacao == 4:
+    print("Muito Bom!")
+elif avaliacao == 3:
+    print("Bom!")
+elif avaliacao == 2:
+    print("Regular.")
+elif avaliacao == 1:
+    print("Ruim.")
+else:
+    print("Avaliação inválida. Digite um número entre 1 e 5.")
+
+print("-" * 40)
+
+# ==============================
+# 3️⃣ VERIFICADOR DE ANO BISSEXTO
+# ==============================
+
+ano = int(input("Digite um ano: "))
+
+if (ano % 4 == 0 and ano % 100 != 0) or (ano % 400 == 0):
+    print("Bissexto")
+else:
+    print("Não Bissexto")
+
+print("-" * 40)
+
+# ==============================
+# 4️⃣ CÁLCULO DO FRETE
+# ==============================
+
+distancia = float(input("Digite a distância em km: "))
+peso = float(input("Digite o peso do pacote em kg: "))
+
+if distancia <= 100:
+    valor_por_kg = 1.0
+elif distancia <= 300:
+    valor_por_kg = 1.5
+else:
+    valor_por_kg = 2.0
+
+frete = peso * valor_por_kg
+
+if peso > 10:
+    frete += 10  # taxa extra
+
+print(f"O valor do frete é: R${frete:.2f}")
