@@ -1,0 +1,174 @@
+# ============================================
+# MÓDULO 4 - Estruturas de Repetição (While)
+# Atividade: Transforme os fluxogramas em código
+# ============================================
+
+# ==============================
+# 1️⃣ Verifica se x > 5
+# ==============================
+print("=== EXERCÍCIO 1 ===")
+
+x = int(input("Digite o valor de x: "))
+
+if x > 5:
+    print("Maior que 5")
+
+print("Fim")
+
+print("-" * 40)
+
+# ==============================
+# 2️⃣ Contador até n
+# ==============================
+print("=== EXERCÍCIO 2 ===")
+
+n = int(input("Digite o valor de n: "))
+cont = 0
+
+while cont < n:
+    cont = cont + 1
+    print(cont)
+
+print("Fim")
+
+print("-" * 40)
+
+# ==============================
+# 3️⃣ Média de 3 notas
+# ==============================
+print("=== EXERCÍCIO 3 ===")
+
+n1 = float(input("Digite a nota 1: "))
+n2 = float(input("Digite a nota 2: "))
+n3 = float(input("Digite a nota 3: "))
+
+m = (n1 + n2 + n3) / 3
+
+if m >= 60:
+    print("Aprovado")
+elif m > 40:
+    print("Recuperação")
+else:
+    print("Reprovado")
+
+print("Fim")
+# Inicialização das variáveis
+N = 0  # Variável para o contador de leituras/casos
+maior = 0  # Variável para armazenar o maior valor encontrado
+
+# Leitura inicial do valor de N
+try:
+    N = int(input("Digite o número de valores a serem lidos (N): "))
+except ValueError:
+    print("Entrada inválida. N deve ser um número inteiro.")
+    exit()
+
+# Loop 'Enquanto N > 0'
+i = 1
+while i <= N:
+    # Leitura do valor X
+    try:
+        X = int(input(f"Digite o {i}º valor (X): "))
+    except ValueError:
+        print("Entrada inválida. O valor deve ser um número inteiro. Tente novamente.")
+        continue # Pula esta iteração e pede o valor novamente
+
+    # Decisão: X > maior?
+    if X > maior:
+        # Atualiza o maior valor
+        maior = X
+
+    # Atualiza o contador (N = N - 1 no fluxograma, mas usaremos um contador 'i' para clareza)
+    # Se você quiser seguir exatamente o fluxograma, onde N é o contador:
+    # N = N - 1
+    i = i + 1
+
+# Imprime o maior valor
+print(f"O maior valor lido é: {maior}")
+# Leitura da quantidade de respondentes (N)
+while True:
+    try:
+        N = int(input("Digite a quantidade de respondentes (N): "))
+        if N <= 0:
+            print("N deve ser um número inteiro positivo.")
+            continue
+        break
+    except ValueError:
+        print("Entrada inválida. Digite um número inteiro.")
+
+# Inicialização da variável de soma
+soma_idades = 0
+
+# Loop para ler as N idades
+for i in range(1, N + 1):
+    while True:
+        try:
+            idade = int(input(f"Digite a idade do respondente {i}: "))
+            if idade < 0:
+                print("Idade não pode ser negativa.")
+                continue
+            soma_idades += idade
+            break
+        except ValueError:
+            print("Entrada inválida. Digite a idade como um número inteiro.")
+
+# Cálculo da média
+media_idades = soma_idades / N
+
+# Impressão do resultado
+print(f"A média das idades é: {media_idades:.2f}") # O ":.2f" formata a saída com 2 casas decimais
+# Leitura da quantidade de experimentos (N)
+try:
+    N = int(input()) # Em plataformas de maratona, a entrada é geralmente feita assim
+except:
+    # Em um ambiente de teste local, peça a entrada se a primeira falhar
+    print("Erro na leitura de N. Assumindo que você está rodando localmente.")
+    N = int(input("Digite a quantidade de experimentos (N): "))
+
+# Inicialização dos contadores
+total_coelhos = 0
+total_ratos = 0
+total_sapos = 0
+
+# Loop para ler N experimentos
+for _ in range(N):
+    try:
+        # Lê a linha com a quantidade e o tipo
+        linha = input().split()
+        quantia = int(linha[0])
+        tipo = linha[1].upper() # Garante que o tipo seja maiúsculo
+
+        # Adiciona ao total correspondente
+        if tipo == 'C':
+            total_coelhos += quantia
+        elif tipo == 'R':
+            total_ratos += quantia
+        elif tipo == 'S':
+            total_sapos += quantia
+        # Ignora tipos inválidos, se houver
+
+    except:
+        # Trata erros de formato na linha de entrada e continua
+        # Geralmente em maratonas, a entrada é garantida como válida,
+        # mas essa é uma boa prática
+        pass
+
+# Cálculo do total geral de cobaias
+total_cobaias = total_coelhos + total_ratos + total_sapos
+
+# Cálculo dos percentuais
+if total_cobaias > 0:
+    perc_coelhos = (total_coelhos / total_cobaias) * 100
+    perc_ratos = (total_ratos / total_cobaias) * 100
+    perc_sapos = (total_sapos / total_cobaias) * 100
+else:
+    perc_coelhos = perc_ratos = perc_sapos = 0.0
+
+# Impressão dos resultados conforme o formato de saída do exemplo
+print(f"Total: {total_cobaias} cobaias")
+print(f"Total de coelhos: {total_coelhos}")
+print(f"Total de ratos: {total_ratos}")
+print(f"Total de sapos: {total_sapos}")
+print(f"Percentual de coelhos: {perc_coelhos:.2f} %")
+print(f"Percentual de ratos: {perc_ratos:.2f} %")
+print(f"Percentual de sapos: {perc_sapos:.2f} %")
