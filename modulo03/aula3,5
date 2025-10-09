@@ -1,0 +1,119 @@
+# ============================================
+# MÓDULO 3 - CONDICIONAIS
+# 3.5 - DECISÕES MÚLTIPLAS
+# ============================================
+
+# ==============================
+# Q1 - Calculadora
+# ==============================
+
+print("=== Q1 - Calculadora ===")
+num1 = float(input("Digite o primeiro operando: "))
+operador = input("Digite o operador (+, -, /, *, **): ")
+num2 = float(input("Digite o segundo operando: "))
+
+if operador == "+":
+    resultado = num1 + num2
+    print(f"Resultado: {num1} + {num2} = {resultado}")
+elif operador == "-":
+    resultado = num1 - num2
+    print(f"Resultado: {num1} - {num2} = {resultado}")
+elif operador == "/":
+    resultado = num1 / num2
+    print(f"Resultado: {num1} / {num2} = {resultado}")
+elif operador == "*":
+    resultado = num1 * num2
+    print(f"Resultado: {num1} * {num2} = {resultado}")
+elif operador == "**":
+    resultado = num1 ** num2
+    print(f"Resultado: {num1} ** {num2} = {resultado}")
+else:
+    print("Erro! Operação inválida.")
+
+print("-" * 40)
+
+# ==============================
+# Q2 - Tipo de Triângulo
+# ==============================
+
+print("=== Q2 - Tipo de Triângulo ===")
+lado1 = float(input("Digite o comprimento do lado 1: "))
+lado2 = float(input("Digite o comprimento do lado 2: "))
+lado3 = float(input("Digite o comprimento do lado 3: "))
+
+if lado1 == lado2 == lado3:
+    print("Triângulo: Equilátero")
+elif lado1 == lado2 or lado1 == lado3 or lado2 == lado3:
+    print("Triângulo: Isósceles")
+else:
+    print("Triângulo: Escaleno")
+
+print("-" * 40)
+
+# ==============================
+# Q3 - Sistema de Avaliação de Desempenho
+# ==============================
+
+print("=== Q3 - Avaliação de Desempenho ===")
+pontuacao = float(input("Digite a pontuação do jogador: "))
+
+if pontuacao >= 90:
+    print("Classificação: Excelente")
+elif pontuacao >= 80:
+    print("Classificação: Bom")
+elif pontuacao >= 70:
+    print("Classificação: Regular")
+else:
+    print("Classificação: Insatisfatório")
+
+print("-" * 40)
+
+# ==============================
+# Q4 - Sistema de Desconto
+# ==============================
+
+print("=== Q4 - Sistema de Desconto ===")
+valor = float(input("Digite o valor total da compra: "))
+
+if valor >= 100:
+    desconto = 20
+elif valor >= 50:
+    desconto = 10
+else:
+    desconto = 0
+
+valor_final = valor - (valor * (desconto / 100))
+
+print(f"Desconto aplicado: {desconto:.1f}%")
+print(f"Valor final com desconto: R${valor_final:.2f}")
+
+print("-" * 40)
+
+# ==============================
+# Q5 - Sistema de Autenticação
+# ==============================
+
+print("=== Q5 - Sistema de Autenticação ===")
+
+# Banco de dados fictício
+usuarios = {
+    "admin": ("admin123", "Administrador"),
+    "usuario1": ("senha123", "Usuário Comum"),
+    "visitante1": ("guest2024", "Visitante")
+}
+
+while True:
+    print("\nDigite 'sair' para encerrar o programa.")
+    usuario = input("Usuário: ")
+
+    if usuario.lower() == "sair":
+        print("Encerrando o sistema...")
+        break
+
+    senha = input("Senha: ")
+
+    if usuario in usuarios and senha == usuarios[usuario][0]:
+        nivel = usuarios[usuario][1]
+        print(f"Login bem-sucedido! Nível de acesso: {nivel}")
+    else:
+        print("Erro: Usuário ou senha inválidos.")
