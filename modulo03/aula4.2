@@ -1,0 +1,131 @@
+# ==============================================================================
+# 1. SOLUÇÃO: FLUXOGRAMA (MAIOR VALOR)
+# Este é um exemplo, pois o código de fluxo de controle depende de como você
+# define N ou do uso de um loop while/break.
+# ==============================================================================
+print("="*40)
+print("1. FLUXOGRAMA: ENCONTRAR O MAIOR VALOR")
+print("="*40)
+
+# Simplificação: ler N e encontrar o maior entre N valores.
+try:
+    N = int(input("1. FLUXOGRAMA: Digite o número de valores a serem lidos (N): "))
+except ValueError:
+    print("Entrada inválida. Pulando para o próximo exercício.")
+    N = 0
+
+maior = None
+
+for i in range(N):
+    while True:
+        try:
+            X = int(input(f"1. FLUXOGRAMA: Digite o {i+1}º valor (X): "))
+            break
+        except ValueError:
+            print("Entrada inválida. Digite um número inteiro.")
+
+    if maior is None or X > maior:
+        maior = X
+
+if maior is not None:
+    print(f"1. FLUXOGRAMA: O maior valor lido é: {maior}")
+else:
+    print("1. FLUXOGRAMA: Nenhum valor válido foi lido.")
+
+
+# ==============================================================================
+# 2. SOLUÇÃO: CÁLCULO DA MÉDIA DAS IDADES
+# ==============================================================================
+print("\n" + "="*40)
+print("2. CÁLCULO DA MÉDIA DAS IDADES")
+print("="*40)
+
+while True:
+    try:
+        N = int(input("2. MÉDIA IDADES: Digite a quantidade de respondentes (N): "))
+        if N > 0:
+            break
+        else:
+            print("N deve ser positivo.")
+    except ValueError:
+        print("Entrada inválida. Digite um número inteiro.")
+
+soma_idades = 0
+
+for i in range(1, N + 1):
+    while True:
+        try:
+            idade = int(input(f"2. MÉDIA IDADES: Digite a idade do respondente {i}: "))
+            if idade >= 0:
+                soma_idades += idade
+                break
+            else:
+                print("Idade não pode ser negativa.")
+        except ValueError:
+            print("Entrada inválida. Digite a idade como um número inteiro.")
+
+if N > 0:
+    media_idades = soma_idades / N
+    print(f"2. MÉDIA IDADES: A média das idades é: {media_idades:.2f}")
+else:
+    print("2. MÉDIA IDADES: N é zero, média não calculada.")
+
+
+# ==============================================================================
+# 3. SOLUÇÃO: EXERCÍCIO DE MARATONA (BEECROWD 1094 - EXPERIÊNCIAS)
+# Adaptação da entrada para ambiente local, usando input()
+# ==============================================================================
+print("\n" + "="*40)
+print("3. BEECROWD 1094: EXPERIÊNCIAS")
+print("="*40)
+
+try:
+    N = int(input("3. MARATONA: Digite a quantidade de experimentos (N): "))
+except ValueError:
+    print("Entrada inválida. Pulando para o próximo exercício.")
+    N = 0
+
+total_coelhos = 0
+total_ratos = 0
+total_sapos = 0
+
+print("3. MARATONA: Digite a quantia e o tipo (ex: '10 C' ou '6 R').")
+for _ in range(N):
+    try:
+        linha = input(f"Experimento {_ + 1}/{N}: ").split()
+        if len(linha) != 2:
+            print("Formato incorreto. Tente novamente.")
+            continue
+            
+        quantia = int(linha[0])
+        tipo = linha[1].upper()
+
+        if tipo == 'C':
+            total_coelhos += quantia
+        elif tipo == 'R':
+            total_ratos += quantia
+        elif tipo == 'S':
+            total_sapos += quantia
+        else:
+            print(f"Tipo '{tipo}' inválido. Use C, R ou S.")
+
+    except ValueError:
+        print("Entrada inválida (quantia não é número).")
+        
+total_cobaias = total_coelhos + total_ratos + total_sapos
+
+if total_cobaias > 0:
+    perc_coelhos = (total_coelhos / total_cobaias) * 100
+    perc_ratos = (total_ratos / total_cobaias) * 100
+    perc_sapos = (total_sapos / total_cobaias) * 100
+else:
+    perc_coelhos = perc_ratos = perc_sapos = 0.0
+
+print("\n3. MARATONA - RESULTADO:")
+print(f"Total: {total_cobaias} cobaias")
+print(f"Total de coelhos: {total_coelhos}")
+print(f"Total de ratos: {total_ratos}")
+print(f"Total de sapos: {total_sapos}")
+print(f"Percentual de coelhos: {perc_coelhos:.2f} %")
+print(f"Percentual de ratos: {perc_ratos:.2f} %")
+print(f"Percentual de sapos: {perc_sapos:.2f} %")
