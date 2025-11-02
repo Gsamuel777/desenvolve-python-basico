@@ -1,0 +1,273 @@
+import math
+
+# ==============================================================================
+# Q1. Fatorial
+# ==============================================================================
+
+def fatorial(n):
+    """Calcula o fatorial de um número inteiro não negativo n."""
+    if n < 0:
+        return "Fatorial não definido para números negativos."
+    
+    fat = 1
+    for i in range(1, n + 1):
+        fat *= i
+    return fat
+
+# Programa Principal (Q1)
+print("="*10, "Q1: Fatorial", "="*10)
+try:
+    n_input = int(input("Digite o valor de n para calcular o fatorial: "))
+    resultado = fatorial(n_input)
+    print(f"O fatorial de {n_input} é: {resultado}\n")
+except ValueError:
+    print("Entrada inválida para Q1. Por favor, digite um número inteiro.\n")
+
+
+# ==============================================================================
+# Q2. Soma dos Quadrados
+# ==============================================================================
+
+def soma_quadrados(num1, num2):
+    """Retorna a soma dos quadrados de dois números."""
+    return num1**2 + num2**2
+
+# Programa Principal (Q2)
+print("="*10, "Q2: Soma dos Quadrados", "="*10)
+try:
+    num_a = float(input("Digite o primeiro número: "))
+    num_b = float(input("Digite o segundo número: "))
+    
+    resultado_sq = soma_quadrados(num_a, num_b)
+    print(f"A soma dos quadrados de {num_a} e {num_b} é: {resultado_sq}\n")
+except ValueError:
+    print("Entrada inválida para Q2. Por favor, digite números válidos.\n")
+
+
+# ==============================================================================
+# Q3. Soma dos Dígitos
+# ==============================================================================
+
+def soma_digitos(n):
+    """Calcula a soma dos dígitos de um número inteiro usando aritmética."""
+    n = abs(n) 
+    soma = 0
+    
+    while n > 0:
+        digito = n % 10
+        soma += digito
+        n //= 10
+        
+    return soma
+
+# Programa Principal (Q3)
+print("="*10, "Q3: Soma dos Dígitos", "="*10)
+try:
+    numero = int(input("Digite um número inteiro para somar seus dígitos: "))
+    resultado_sd = soma_digitos(numero)
+    print(f"A soma dos dígitos de {numero} é: {resultado_sd}\n")
+except ValueError:
+    print("Entrada inválida para Q3. Por favor, digite um número inteiro.\n")
+
+
+# ==============================================================================
+# Q4. Inverte Valor e Verifica Paridade
+# ==============================================================================
+
+def inverteValor(n):
+    """Inverte um número inteiro usando apenas operações aritméticas."""
+    sinal = -1 if n < 0 else 1
+    n = abs(n)
+    invertido = 0
+    
+    while n > 0:
+        digito = n % 10
+        invertido = invertido * 10 + digito
+        n //= 10
+        
+    return invertido * sinal
+
+def verificaInverso(original, invertido):
+    """Verifica se o valor original e o invertido são ambos par ou ambos ímpar."""
+    return (original % 2) == (invertido % 2)
+
+# Programa Principal (Q4)
+print("="*10, "Q4: Inverte e Verifica Paridade", "="*10)
+try:
+    valor_original = int(input("Digite um valor inteiro: "))
+    
+    valor_invertido = inverteValor(valor_original)
+    print(f"O valor invertido é: {valor_invertido}")
+    
+    resultado_inverso = verificaInverso(valor_original, valor_invertido)
+    print(f"Resultado da verificação de paridade: {resultado_inverso}\n")
+
+except ValueError:
+    print("Entrada inválida para Q4. Por favor, digite um número inteiro.\n")
+
+
+# ==============================================================================
+# Q5. Cálculos de Perímetro com Menu
+# Este bloco executa um loop de menu.
+# ==============================================================================
+
+def calcula_perimetro_triangulo(lado1, lado2, lado3):
+    """Calcula o perímetro de um triângulo (soma dos lados)."""
+    return lado1 + lado2 + lado3
+
+def calcula_perimetro_circulo(raio):
+    """Calcula o perímetro (circunferência) de um círculo: 2 * pi * r."""
+    return 2 * math.pi * raio
+
+def calcula_perimetro_retangulo(lado1, lado2=None):
+    """
+    Calcula o perímetro de um retângulo (2*l1 + 2*l2) ou quadrado (4*l1).
+    Se lado2 não for fornecido ou for 0, trata como quadrado.
+    """
+    if lado2 is None or lado2 == 0:
+        return 4 * lado1
+    else:
+        return 2 * lado1 + 2 * lado2
+
+def menu_perimetros():
+    """Função principal que executa o menu interativo."""
+    print("="*10, "Q5: Menu de Perímetros", "="*10)
+    
+    while True:
+        print("\nMenu de Cálculos de Perímetro:")
+        print("1 - Calcular perímetro triângulo")
+        print("2 - Calcular perímetro círculo")
+        print("3 - Calcular perímetro retângulo/quadrado")
+        print("4 - Sair")
+
+        try:
+            opcao = input("\nOpção: ")
+            
+            if opcao == '1':
+                print("Digite os três lados do triângulo:")
+                l1 = float(input())
+                l2 = float(input())
+                l3 = float(input())
+                perimetro = calcula_perimetro_triangulo(l1, l2, l3)
+                print(f"O perímetro é: {perimetro:.2f}")
+
+            elif opcao == '2':
+                raio = float(input("Digite o raio do círculo: "))
+                perimetro = calcula_perimetro_circulo(raio)
+                print(f"O perímetro é: {perimetro:.2f}")
+
+            elif opcao == '3':
+                l1 = float(input("Informe o primeiro lado: "))
+                l2_input = input("Informe o segundo lado (ou digite 0 para quadrado): ")
+                
+                if l2_input == '0':
+                    perimetro = calcula_perimetro_retangulo(l1, lado2=0) 
+                else:
+                    l2 = float(l2_input)
+                    perimetro = calcula_perimetro_retangulo(l1, l2)
+                    
+                print(f"O perímetro é: {perimetro:.2f}")
+
+            elif opcao == '4':
+                print("Saindo do programa Q5.")
+                break
+            
+            else:
+                print("Opção inválida. Por favor, escolha uma opção de 1 a 4.")
+                
+        except ValueError:
+            print("Erro: Entrada inválida. Certifique-se de digitar números.")
+        except Exception as e:
+            print(f"Ocorreu um erro: {e}")
+
+# Executa o programa Q5
+# menu_perimetros() 
+# OBS: O Q5 é deixado como comentário por ser um menu interativo longo. 
+# Remova o comentário da linha acima para executá-lo.
+
+
+# ==============================================================================
+# Q6. Par ou Ímpar com Lambda
+# ==============================================================================
+
+# Função lambda: retorna 'par' se o resto da divisão por 2 for 0, senão 'ímpar'
+verifica_paridade = lambda n: 'par' if n % 2 == 0 else 'ímpar'
+
+print("\n" + "="*10, "Q6: Par ou Ímpar com Lambda", "="*10)
+print("Digite os valores (digite 0 para finalizar):")
+
+while True:
+    try:
+        entrada = input()
+        numero = int(entrada)
+
+        if numero == 0:
+            print("Entrada de dados Q6 finalizada.")
+            break
+            
+        resultado = verifica_paridade(numero)
+        print(f"O número {numero} é: {resultado}")
+        
+    except ValueError:
+        print("Entrada inválida em Q6. Por favor, digite um número inteiro.")
+    except EOFError:
+        break
+
+
+# ==============================================================================
+# Q7. Maior ou Menor com Lambda
+# ==============================================================================
+
+print("\n" + "="*10, "Q7: Maior ou Menor com Lambda", "="*10)
+
+# 1. Obter a escolha do usuário e definir a função de comparação
+comparador = None
+operacao_escolhida = None
+
+while True:
+    op_input = input("Opções: (1) maior ou (2) menor? Opção: ")
+    
+    if op_input == '1':
+        # Lambda que compara dois números (a, b) e retorna o maior
+        comparador = lambda a, b: a if a > b else b
+        operacao_escolhida = 'maior'
+        break
+    elif op_input == '2':
+        # Lambda que compara dois números (a, b) e retorna o menor
+        comparador = lambda a, b: a if a < b else b
+        operacao_escolhida = 'menor'
+        break
+    else:
+        print("Opção inválida. Digite 1 ou 2.")
+        
+# 2. Ler os valores de entrada e encontrar o resultado
+lista_valores = []
+print(f"\nDigite os valores de entrada para encontrar o {operacao_escolhida}. Digite 0 para finalizar.")
+
+while True:
+    try:
+        entrada = input()
+        numero = int(entrada)
+        
+        if numero == 0:
+            break
+            
+        lista_valores.append(numero)
+        
+    except ValueError:
+        print("Entrada inválida. Por favor, digite um número inteiro.")
+        
+# 3. Processar o resultado
+if not lista_valores:
+    print("\nNenhum valor válido foi digitado.")
+else:
+    resultado_final = lista_valores[0]
+    
+    # Aplica a função lambda em todos os valores
+    for valor in lista_valores[1:]:
+        resultado_final = comparador(resultado_final, valor)
+        
+    print(f"\nO {operacao_escolhida} valor é: {resultado_final}")
+
+print("\n" + "="*40)
+print("Execução das questões Q1 a Q7 finalizada (Q5 é opcional).")
