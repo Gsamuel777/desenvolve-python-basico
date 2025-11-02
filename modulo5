@@ -1,0 +1,102 @@
+# ============================================================
+# Atividades com Python - Módulo de Prática
+# Autor: Gustavo Samuel Silva
+# ============================================================
+
+import random
+import math
+import datetime
+import emoji
+
+def diferenca_absoluta():
+    """1️⃣ Diferença absoluta entre dois números decimais"""
+    num1 = float(input("Digite o primeiro número: "))
+    num2 = float(input("Digite o segundo número: "))
+    diferenca = round(abs(num1 - num2), 2)
+    print(f"\nA diferença absoluta entre os números é: {diferenca}\n")
+
+def raiz_quadrada_soma():
+    """2️⃣ Gera n números aleatórios e calcula a raiz quadrada da soma"""
+    n = int(input("Quantos números aleatórios deseja gerar? "))
+    soma = 0
+    print("\nNúmeros gerados:")
+    for i in range(n):
+        valor = random.randint(0, 100)
+        soma += valor
+        print(f"  Valor {i+1}: {valor}")
+    raiz = math.sqrt(soma)
+    print(f"\nSoma total: {soma}")
+    print(f"Raiz quadrada da soma: {round(raiz, 2)}\n")
+
+def jogo_adivinhacao():
+    """3️⃣ Jogo de adivinhação"""
+    numero_secreto = random.randint(1, 10)
+    print("\nJogo de adivinhação iniciado!")
+    while True:
+        palpite = int(input("Adivinhe o número entre 1 e 10: "))
+        if palpite > numero_secreto:
+            print("Muito alto, tente novamente!\n")
+        elif palpite < numero_secreto:
+            print("Muito baixo, tente novamente!\n")
+        else:
+            print(f"Correto! O número é {numero_secreto}.\n")
+            break
+
+def data_hora_atual():
+    """4️⃣ Exibe data e hora atuais formatadas"""
+    agora = datetime.datetime.now()
+    data = f"{agora.day:02d}/{agora.month:02d}/{agora.year}"
+    hora = f"{agora.hour:02d}:{agora.minute:02d}"
+    print(f"\nData: {data}")
+    print(f"Hora: {hora}\n")
+
+def sistema_emojis():
+    """5️⃣ Sistema de mensagens com emojis"""
+    print("\nEmojis disponíveis:")
+    print("❤️  - :red_heart:")
+    print("👍  - :thumbs_up:")
+    print("🤔  - :thinking_face:")
+    print("🥳  - :partying_face:\n")
+    frase = input("Digite uma frase e ela será emojizada:\n")
+    frase_emojizada = emoji.emojize(frase, language='alias')
+    print("\nFrase emojizada:")
+    print(frase_emojizada, "\n")
+
+# ============================================================
+# Menu principal
+# ============================================================
+
+def menu():
+    while True:
+        print("===============================================")
+        print("         🌟 MENU DE PROGRAMAS EM PYTHON 🌟")
+        print("===============================================")
+        print("1 - Diferença absoluta entre dois números")
+        print("2 - Raiz quadrada da soma de números aleatórios")
+        print("3 - Jogo de adivinhação")
+        print("4 - Exibir data e hora atuais")
+        print("5 - Sistema de mensagens com emojis")
+        print("0 - Sair")
+        print("===============================================")
+
+        opcao = input("Escolha uma opção: ")
+
+        if opcao == "1":
+            diferenca_absoluta()
+        elif opcao == "2":
+            raiz_quadrada_soma()
+        elif opcao == "3":
+            jogo_adivinhacao()
+        elif opcao == "4":
+            data_hora_atual()
+        elif opcao == "5":
+            sistema_emojis()
+        elif opcao == "0":
+            print("\nEncerrando o programa... Até logo! 👋")
+            break
+        else:
+            print("\nOpção inválida! Tente novamente.\n")
+
+# Execução principal
+if __name__ == "__main__":
+    menu()
