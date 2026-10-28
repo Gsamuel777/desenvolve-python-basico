@@ -1,0 +1,240 @@
+function abrirDashboardExecutivo() {
+  const html = HtmlService.createHtmlOutputFromFile('IndexExecutivo')
+    .setWidth(1200)
+    .setHeight(800)
+    .setTitle('Dashboard Executivo de Projetos');
+  SpreadsheetApp.getUi().showModalDialog(html, 'Dashboard Executivo');
+}
+
+function getDashboardDataExecutivo() {
+  try {
+    let planilha;
+    try { planilha = SpreadsheetApp.getActiveSpreadsheet(); } catch(e) {}
+    if (!planilha) planilha = SpreadsheetApp.openById(CONFIG.ID_PLANILHA);
+    
+    const abaNome = CONFIG.NOME_ABA;
+    const aba = planilha.getSheetByName(abaNome);
+    if (!aba) throw new Error(`Aba "${abaNome}" não encontrada na planilha. Verifique o nome.`);
+
+    const valores = aba.getDataRange().getValues();
+    if (valores.length < 2) throw new Error('A aba não possui dados suficientes.');
+
+    let linhaCabecalhoIdx = -1;
+    let cabecalhos = [];
+    
+    // Detecta o cabeçalho varrendo as primeiras 10 linhas da tabela
+    for (let r = 0; r < Math.min(valores.length, 10); r++) {
+      const linhaTexto = valores[r].join('').toLowerCase();
+      if (linhaTexto.includes('id do projeto') || linhaTexto.includes('nome do projeto') || linhaTexto.includes('tipo de demanda')) {
+        linhaCabecalhoIdx = r;
+        cabecalhos = valores[r];
+        break;
+      }
+    }
+
+    if (linhaCabecalhoIdx === -1) throw new Error('Não foi possível encontrar a linha de cabeçalhos.');
+
+    const mapaColunas = mapearCabecalhos_(cabecalhos);
+    const projetos = [];
+
+    // Lê a partir da linha logo abaixo do cabeçalho encontrado
+    for (let i = linhaCabecalhoIdx + 1; i < valores.length; i++) {
+      const linha = valores[i];
+      if (linhaVazia_(linha)) continue;
+      
+      const idProjeto = linha[mapaColunas['id']];
+      const nomeProjeto = linha[mapaColunas['projeto']];
+      if (!idProjeto && !nomeProjeto) continue;
+
+      const objeto = converterLinhaEmProjeto_(linha, cabecalhos, mapaColunas, i + 1);
+      if (objeto) projetos.push(objeto);
+    }
+
+    const metricas = calcularIndicadores_(projetos);
+    const mensal = calcularMovimentoMensal_(projetos);
+    
+    return Object.assign({
+      projetos: projetos,
+      totalProjetos: projetos.length,
+      ranking: contarPorCampo_(projetos, 'responsavel'),
+      tipoDemanda: objetoContagem_(contarPorCampo_(projetos, 'tipo')),
+      aging: calcularAging_(projetos),
+      mensal: mensal,
+      top10: projetos.filter(p => !statusEncerrado_(p.status)).sort((a, b) => (b.dias || 0) - (a.dias || 0)).slice(0, 10),
+      fonte: {
+        planilha: planilha.getName(),
+        aba: aba.getName(),
+        linhaCabecalho: linhaCabecalhoIdx + 1,
+        ultimaAtualizacao: Utilities.formatDate(new Date(), CONFIG.FUSO_HORARIO, 'dd/MM/yyyy HH:mm:ss')
+      }
+    }, metricas);
+  } catch (erro) {
+    console.error('Erro em getDashboardDataExecutivo: ' + erro);
+    throw new Error('Falha ao carregar dados: ' + erro.message);
+  }
+}
+
+// --- Funções Auxiliares do Dashboard Executivo ---
+
+function mapearCabecalhos_(cabecalhos) {
+  const resultado = {};
+  const normalizados = cabecalhos.map(normalizarChave_);
+  Object.keys(ALIASES).forEach(campo => {
+    let indice = -1, melhorNivel = 0;
+    const aliases = ALIASES[campo].map(normalizarChave_);
+    for (let c = 0; c < normalizados.length; c++) {
+      const nome = normalizados[c];
+      if (!nome) continue;
+      let nivel = aliases.includes(nome) ? 3 : (aliases.some(a => a.length >= 5 && (nome.includes(a) || a.includes(nome))) ? 1 : 0);
+      if (nivel > melhorNivel) { melhorNivel = nivel; indice = c; }
+      if (nivel === 3) break;
+    }
+    if (indice >= 0) resultado[campo] = indice;
+  });
+  return resultado;
+}
+
+function converterLinhaEmProjeto_(linha, cabecalhos, mapaColunas, numeroLinha) {
+  const buscar = campo => mapaColunas[campo] !== undefined ? linha[mapaColunas[campo]] : undefined;
+  
+  const projeto = {};
+  cabecalhos.forEach((cabecalho, indice) => {
+    let chave = String(cabecalho || `Coluna ${indice + 1}`).trim();
+    projeto[chave] = valorCliente_(linha[indice]);
+  });
+
+  projeto.id = textoCampo_(buscar('id')) || String(numeroLinha - 1);
+  projeto.projeto = textoCampo_(buscar('projeto')) || `Projeto ${numeroLinha}`;
+  projeto.status = textoCampo_(buscar('status')) || 'Não informado';
+  projeto.responsavel = textoCampo_(buscar('responsavel')) || 'Não informado';
+  projeto.tipo = textoCampo_(buscar('tipo')) || 'Não informado';
+  projeto.fase = textoCampo_(buscar('fase')) || '—';
+
+  const dataEntrada = converterData_(buscar('dataEntrada'));
+  const dataFechamento = converterData_(buscar('dataFechamento'));
+  projeto.dataEntrada = dataEntrada ? formatarDataCliente_(dataEntrada) : '';
+  projeto.dataFechamento = dataFechamento ? formatarDataCliente_(dataFechamento) : '';
+
+  let dias = converterNumero_(buscar('dias'));
+  if (dias === null && dataEntrada) dias = diasEntre_(dataEntrada, dataFechamento || new Date());
+  projeto.dias = dias;
+  
+  let vencido = converterNumero_(buscar('vencido'));
+  
+  // SOLUÇÃO: Se a coluna "Vencidos" não existir na planilha, calcula os dias de atraso automaticamente com base na Meta SLA (30 dias)
+  if (vencido === null && projeto.dias !== null && !statusEncerrado_(projeto.status)) {
+    vencido = projeto.dias > CONFIG.META_SLA_DIAS ? (projeto.dias - CONFIG.META_SLA_DIAS) : 0;
+  }
+  
+  projeto.vencido = vencido === null ? null : Math.max(0, vencido);
+  projeto.sla = valorCliente_(buscar('sla'));
+
+  return projeto;
+}
+
+function calcularIndicadores_(projetos) {
+  const ativos = projetos.filter(p => !statusEncerrado_(p.status));
+  const encerrados = projetos.filter(p => statusEncerrado_(p.status));
+  const diasAtivos = ativos.map(p => p.dias).filter(Number.isFinite);
+  const diasEncerrados = encerrados.map(p => p.dias).filter(Number.isFinite);
+  
+  return {
+    ativos: ativos.length,
+    encerrados: encerrados.length,
+    tempoMedio: diasEncerrados.length ? media_(diasEncerrados) : null,
+    backlog30: ativos.filter(p => p.dias > 30).length,
+    backlog90: ativos.filter(p => p.dias > 90).length,
+    maiorProjeto: diasAtivos.length ? Math.max(...diasAtivos) : null,
+    mediaDiasAbertos: diasAtivos.length ? media_(diasAtivos) : null,
+  };
+}
+
+function calcularMovimentoMensal_(projetos) {
+  const agora = new Date();
+  const meses = [], lookup = {};
+  const nomes = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
+  
+  for (let i = 11; i >= 0; i--) {
+    const d = new Date(agora.getFullYear(), agora.getMonth() - i, 1);
+    const chave = d.getFullYear() + '-' + d.getMonth();
+    const obj = { chave, mes: nomes[d.getMonth()] + '/' + String(d.getFullYear()).slice(-2), entradas: 0, encerramentos: 0 };
+    meses.push(obj);
+    lookup[chave] = obj;
+  }
+  
+  projetos.forEach(p => {
+    const ent = converterData_(p.dataEntrada);
+    const fec = converterData_(p.dataFechamento);
+    if (ent && lookup[`${ent.getFullYear()}-${ent.getMonth()}`]) lookup[`${ent.getFullYear()}-${ent.getMonth()}`].entradas++;
+    if (fec && lookup[`${fec.getFullYear()}-${fec.getMonth()}`]) lookup[`${fec.getFullYear()}-${fec.getMonth()}`].encerramentos++;
+  });
+  
+  return meses;
+}
+
+function contarPorCampo_(projetos, campo) {
+  const contagem = {};
+  projetos.forEach(p => {
+    const nome = String(p[campo] || 'Não informado').trim() || 'Não informado';
+    contagem[nome] = (contagem[nome] || 0) + 1;
+  });
+  return Object.keys(contagem).map(nome => ({ nome, quantidade: contagem[nome] })).sort((a, b) => b.quantidade - a.quantidade);
+}
+
+function objetoContagem_(lista) {
+  return lista.reduce((obj, item) => { obj[item.nome] = item.quantidade; return obj; }, {});
+}
+
+function calcularAging_(projetos) {
+  const ativos = projetos.filter(p => !statusEncerrado_(p.status) && Number.isFinite(p.dias));
+  return {
+    faixa30: ativos.filter(p => p.dias <= 30).length,
+    faixa60: ativos.filter(p => p.dias > 30 && p.dias <= 60).length,
+    faixa90: ativos.filter(p => p.dias > 60 && p.dias <= 90).length,
+    acima90: ativos.filter(p => p.dias > 90).length
+  };
+}
+
+function statusEncerrado_(status) {
+  const s = normalizarChave_(status);
+  return ['encerrado', 'encerrada', 'concluido', 'concluida', 'finalizado', 'fechado', 'cancelado'].some(p => s.includes(p));
+}
+
+function converterData_(valor) {
+  if (valor instanceof Date && !isNaN(valor.getTime())) return valor;
+  if (!valor) return null;
+  if (typeof valor === 'number') {
+    if (valor > 100000000000) return new Date(valor);
+    if (valor > 20000 && valor < 100000) return new Date(Date.UTC(1899, 11, 30) + (valor * 86400000));
+    return null;
+  }
+  const br = String(valor).trim().match(/^(\d{1,2})[\/-](\d{1,2})[\/-](\d{2,4})/);
+  if (br) {
+    let ano = Number(br[3]);
+    if (ano < 100) ano += ano < 50 ? 2000 : 1900;
+    return new Date(ano, Number(br[2]) - 1, Number(br[1]));
+  }
+  const iso = new Date(valor);
+  return isNaN(iso.getTime()) ? null : iso;
+}
+
+function converterNumero_(valor) {
+  if (!valor) return null;
+  if (typeof valor === 'number') return Number.isFinite(valor) ? valor : null;
+  let txt = String(valor).trim().replace(/\s/g, '').replace(/R\$/gi, '').replace(/%$/, '');
+  txt = /^-?\d{1,3}(\.\d{3})+(,\d+)?$/.test(txt) ? txt.replace(/\./g, '').replace(',', '.') : txt.replace(',', '.');
+  const n = Number(txt);
+  return Number.isFinite(n) ? n : null;
+}
+
+function diasEntre_(inicio, fim) {
+  if (!inicio || !fim) return null;
+  return Math.max(0, Math.floor((Date.UTC(fim.getFullYear(), fim.getMonth(), fim.getDate()) - Date.UTC(inicio.getFullYear(), inicio.getMonth(), inicio.getDate())) / 86400000));
+}
+
+function formatarDataCliente_(data) { return Utilities.formatDate(data, CONFIG.FUSO_HORARIO, 'dd/MM/yyyy'); }
+function valorCliente_(valor) { return (valor instanceof Date && !isNaN(valor.getTime())) ? formatarDataCliente_(valor) : (valor || ''); }
+function textoCampo_(valor) { return valor ? String(valor).trim() : ''; }
+function normalizarChave_(valor) { return String(valor || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z0-9]/g, ''); }
+function linhaVazia_(linha) { return !linha || linha.every(v => v === '' || v === null || v === undefined); }
+function media_(valores) { return valores.length ? valores.reduce((a, b) => a + b, 0) / valores.length : null; }

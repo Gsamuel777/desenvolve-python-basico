@@ -1,0 +1,896 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <base target="_top">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light">
+  <title>Dashboard Executivo de Projetos</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+  <style>
+    :root {
+      --navy-950: #0b1730;
+      --navy-900: #10213f;
+      --navy-800: #17345e;
+      --blue-700: #1859a9;
+      --blue-600: #2474d2;
+      --blue-100: #eaf3ff;
+      --cyan-500: #15a9c7;
+      --green-600: #16845b;
+      --green-100: #e5f6ee;
+      --amber-600: #b77912;
+      --amber-100: #fff4d8;
+      --red-600: #c43e4c;
+      --red-100: #ffeaed;
+      --ink-900: #17263e;
+      --ink-700: #465873;
+      --ink-500: #71819a;
+      --line: #e2e8f0;
+      --surface: #ffffff;
+      --page: #f3f6fb;
+      --shadow: 0 8px 24px rgba(17, 38, 72, .07);
+      --radius: 16px;
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      background: var(--page);
+      color: var(--ink-900);
+      font-family: Inter, "Segoe UI", Arial, sans-serif;
+      font-size: 14px;
+      line-height: 1.5;
+    }
+    button, input, select { font: inherit; }
+    button { cursor: pointer; }
+    button:focus-visible, input:focus-visible, select:focus-visible {
+      outline: 3px solid rgba(36, 116, 210, .25);
+      outline-offset: 2px;
+    }
+
+    .topbar {
+      background: linear-gradient(115deg, var(--navy-950), var(--navy-800));
+      color: #fff;
+      padding: 26px clamp(18px, 3vw, 42px) 30px;
+      position: relative;
+      overflow: hidden;
+    }
+    .topbar::after {
+      content: "";
+      position: absolute;
+      width: 330px;
+      height: 330px;
+      right: -95px;
+      top: -190px;
+      border: 1px solid rgba(255,255,255,.12);
+      border-radius: 50%;
+      box-shadow: 0 0 0 38px rgba(255,255,255,.035), 0 0 0 78px rgba(255,255,255,.025);
+      pointer-events: none;
+    }
+    .topbar-inner {
+      max-width: 1700px;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 22px;
+      position: relative;
+      z-index: 1;
+    }
+    .brand-line {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+    .brand-mark {
+      width: 48px;
+      height: 48px;
+      border-radius: 14px;
+      display: grid;
+      place-items: center;
+      color: #fff;
+      font-size: 22px;
+      font-weight: 800;
+      background: linear-gradient(145deg, #2f8af0, #15a9c7);
+      box-shadow: 0 7px 20px rgba(0,0,0,.18);
+      flex-shrink: 0;
+    }
+    .eyebrow {
+      margin: 0 0 4px;
+      color: #a9c7ef;
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: .15em;
+      text-transform: uppercase;
+    }
+    h1 {
+      margin: 0;
+      color: #fff;
+      font-size: clamp(24px, 2.3vw, 34px);
+      font-weight: 750;
+      letter-spacing: -.035em;
+      line-height: 1.15;
+    }
+    .subtitle { margin: 8px 0 0; color: #d0ddf0; font-size: 13px; }
+    .topbar-actions { display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
+    .last-update { color:#c2d3eb; font-size:12px; white-space:nowrap; }
+
+    .page {
+      max-width: 1700px;
+      margin: 0 auto;
+      padding: 24px clamp(14px, 3vw, 42px) 44px;
+    }
+    .section-heading {
+      display:flex;
+      align-items:flex-end;
+      justify-content:space-between;
+      gap:16px;
+      margin: 0 0 13px;
+    }
+    .section-heading h2 { margin:0; color:var(--navy-900); font-size:17px; letter-spacing:-.02em; }
+    .section-heading p { margin:4px 0 0; color:var(--ink-500); font-size:12px; }
+
+    .panel, .chart-card, .table-card {
+      background: var(--surface);
+      border: 1px solid rgba(221,229,239,.85);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+    }
+    .filters-panel { padding: 18px; margin-bottom: 23px; }
+    .filters-head {
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+      margin-bottom: 14px;
+    }
+    .filters-title { display:flex; align-items:center; gap:9px; font-weight:750; color:var(--navy-900); }
+    .filter-icon {
+      width:30px; height:30px; display:grid; place-items:center;
+      border-radius:9px; color:var(--blue-700); background:var(--blue-100); font-size:16px;
+    }
+    .filters-grid {
+      display:grid;
+      grid-template-columns: repeat(5, minmax(145px, 1fr));
+      gap:12px;
+    }
+    .field label { display:block; margin:0 0 6px; color:var(--ink-700); font-size:11px; font-weight:800; letter-spacing:.04em; text-transform:uppercase; }
+    .field select, .search-input {
+      width:100%; min-width:0; height:42px; padding:0 12px;
+      color:var(--ink-900); background:#fbfcfe; border:1px solid #d7e0ec;
+      border-radius:10px; transition:border-color .15s, box-shadow .15s;
+    }
+    .field select:hover, .search-input:hover { border-color:#a8bdd7; }
+    .field select:focus, .search-input:focus { outline:none; border-color:var(--blue-600); box-shadow:0 0 0 3px rgba(36,116,210,.12); }
+    .filter-actions { display:flex; gap:10px; align-items:center; flex-wrap:wrap; margin-top:15px; }
+    .btn {
+      display:inline-flex; align-items:center; justify-content:center; gap:8px;
+      min-height:40px; padding:9px 15px; border:1px solid transparent;
+      border-radius:10px; font-size:12px; font-weight:800; transition:transform .15s, background .15s, box-shadow .15s;
+    }
+    .btn:hover { transform:translateY(-1px); }
+    .btn-primary { background:var(--blue-600); color:#fff; box-shadow:0 5px 12px rgba(36,116,210,.18); }
+    .btn-primary:hover { background:#1764bd; }
+    .btn-secondary { background:#fff; border-color:#d8e1ed; color:var(--ink-700); }
+    .btn-secondary:hover { background:#f7faff; }
+    .btn-export { background:var(--green-600); color:#fff; }
+    .btn-export:hover { background:#11734e; }
+    .btn-print { background:var(--navy-800); color:#fff; }
+    .btn-print:hover { background:var(--navy-900); }
+    .filter-summary { margin-left:auto; color:var(--ink-500); font-size:12px; }
+
+    .status-message { display:none; margin:0 0 20px; padding:13px 15px; border-radius:11px; font-size:13px; }
+    .status-message.show { display:block; }
+    .status-message.error { color:#8f2732; background:var(--red-100); border:1px solid #f3c6cc; }
+    .status-message.info { color:#23588b; background:var(--blue-100); border:1px solid #c8def8; }
+
+    .kpi-grid { display:grid; grid-template-columns:repeat(4, minmax(0,1fr)); gap:15px; margin-bottom:25px; }
+    .kpi-card {
+      min-height:132px; padding:19px 19px 17px; position:relative; overflow:hidden;
+      background:#fff; border:1px solid rgba(221,229,239,.9); border-radius:var(--radius); box-shadow:var(--shadow);
+    }
+    .kpi-card::after {
+      content:""; position:absolute; top:0; left:0; bottom:0; width:4px; background:var(--accent, var(--blue-600));
+    }
+    .kpi-top { display:flex; align-items:center; justify-content:space-between; gap:8px; }
+    .kpi-label { color:var(--ink-500); font-size:11px; font-weight:800; text-transform:uppercase; letter-spacing:.055em; }
+    .kpi-symbol { display:grid; place-items:center; width:30px; height:30px; border-radius:9px; background:var(--tint, var(--blue-100)); color:var(--accent, var(--blue-600)); font-size:16px; }
+    .kpi-value { color:var(--navy-900); font-size:clamp(25px, 2.2vw, 34px); line-height:1.2; font-weight:800; letter-spacing:-.04em; margin-top:13px; overflow-wrap:anywhere; }
+    .kpi-foot { color:var(--ink-500); font-size:11px; margin-top:5px; }
+    .accent-blue { --accent:var(--blue-600); --tint:var(--blue-100); }
+    .accent-cyan { --accent:var(--cyan-500); --tint:#e2f8fb; }
+    .accent-green { --accent:var(--green-600); --tint:var(--green-100); }
+    .accent-amber { --accent:var(--amber-600); --tint:var(--amber-100); }
+    .accent-red { --accent:var(--red-600); --tint:var(--red-100); }
+    .accent-navy { --accent:var(--navy-800); --tint:#e9eef6; }
+
+    .charts-grid { display:grid; grid-template-columns:repeat(2, minmax(0,1fr)); gap:18px; margin-bottom:24px; }
+    .chart-card { padding:20px; min-width:0; }
+    .card-heading { display:flex; justify-content:space-between; align-items:flex-start; gap:12px; margin-bottom:13px; }
+    .card-heading h3 { margin:0; color:var(--navy-900); font-size:14px; letter-spacing:-.01em; }
+    .card-heading p { margin:4px 0 0; color:var(--ink-500); font-size:11px; }
+    .chart-tag { white-space:nowrap; border-radius:7px; padding:4px 8px; background:#f0f5fb; color:var(--ink-700); font-size:10px; font-weight:800; }
+    .chart-wrap { position:relative; height:285px; }
+    .chart-empty { display:none; min-height:285px; place-items:center; text-align:center; color:var(--ink-500); padding:25px; }
+    .chart-empty.show { display:grid; }
+
+    .tables-grid { display:grid; grid-template-columns:repeat(2, minmax(0,1fr)); gap:18px; margin-bottom:24px; }
+    .table-card { padding:19px; min-width:0; }
+    .table-wrap { width:100%; overflow:auto; border:1px solid var(--line); border-radius:11px; }
+    table { border-collapse:separate; border-spacing:0; width:100%; min-width:540px; font-size:12px; }
+    th, td { text-align:left; padding:11px 13px; border-bottom:1px solid #edf1f6; vertical-align:middle; }
+    th { position:sticky; top:0; z-index:1; color:#536681; background:#f5f8fc; font-size:10px; font-weight:800; letter-spacing:.045em; text-transform:uppercase; white-space:nowrap; }
+    tbody tr:last-child td { border-bottom:0; }
+    tbody tr:hover td { background:#f9fbfe; }
+    td { color:var(--ink-700); }
+    td.project-name { color:var(--navy-900); font-weight:700; min-width:180px; }
+    .number-cell { font-variant-numeric:tabular-nums; white-space:nowrap; }
+    .danger-text { color:var(--red-600); font-weight:800; }
+    .neutral-text { color:var(--ink-500); }
+    .status-pill { display:inline-flex; align-items:center; border-radius:6px; padding:4px 8px; font-size:10px; font-weight:800; white-space:nowrap; background:#eef2f7; color:#51627b; }
+    .status-pill.active { background:var(--blue-100); color:#1859a9; }
+    .status-pill.closed { background:var(--green-100); color:#16734f; }
+    .status-pill.late { background:var(--red-100); color:#b52c3a; }
+    .status-pill.pending { background:var(--amber-100); color:#99630d; }
+    .empty-row { padding:28px !important; text-align:center; color:var(--ink-500); }
+
+    .portfolio-card { padding:20px; }
+    .portfolio-toolbar { display:flex; justify-content:space-between; align-items:flex-end; gap:16px; margin-bottom:14px; }
+    .portfolio-toolbar h3 { margin:0; color:var(--navy-900); font-size:16px; }
+    .portfolio-toolbar p { margin:4px 0 0; color:var(--ink-500); font-size:11px; }
+    .search-box { width:min(100%, 330px); position:relative; }
+    .search-box .search-input { padding-left:37px; background:#fff; }
+    .search-icon { position:absolute; top:10px; left:12px; color:#8191a8; font-size:16px; pointer-events:none; }
+    .portfolio-table { min-width:970px; }
+    .table-footer { display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px; padding-top:14px; color:var(--ink-500); font-size:11px; }
+    .pagination { display:flex; align-items:center; gap:7px; }
+    .pagination button { min-width:32px; height:31px; border:1px solid #d9e2ed; border-radius:8px; color:var(--ink-700); background:white; font-weight:800; }
+    .pagination button:disabled { opacity:.4; cursor:not-allowed; }
+    .pagination .page-indicator { min-width:85px; text-align:center; }
+    .footer-note { margin-top:20px; text-align:center; color:#8391a7; font-size:11px; }
+    .loading { opacity:.62; pointer-events:none; }
+
+    @media (max-width: 1200px) {
+      .filters-grid { grid-template-columns:repeat(3, minmax(0,1fr)); }
+      .kpi-grid { grid-template-columns:repeat(4, minmax(0,1fr)); }
+    }
+    @media (max-width: 900px) {
+      .kpi-grid { grid-template-columns:repeat(2, minmax(0,1fr)); }
+      .charts-grid, .tables-grid { grid-template-columns:1fr; }
+      .topbar-inner { align-items:flex-start; flex-direction:column; }
+      .last-update { white-space:normal; }
+    }
+    @media (max-width: 600px) {
+      .topbar { padding-top:22px; }
+      .page { padding-top:16px; }
+      .brand-mark { width:42px; height:42px; }
+      .filters-grid { grid-template-columns:repeat(2, minmax(0,1fr)); }
+      .filter-actions .btn { flex:1 1 calc(50% - 8px); }
+      .filter-summary { flex-basis:100%; margin-left:0; }
+      .kpi-card { min-height:118px; padding:15px; }
+      .kpi-value { font-size:26px; }
+      .chart-card, .table-card, .portfolio-card { padding:14px; }
+      .portfolio-toolbar { align-items:stretch; flex-direction:column; }
+      .search-box { width:100%; }
+      .chart-wrap { height:250px; }
+    }
+    @media print {
+      body { background:#fff; color:#111; }
+      .topbar { background:#fff !important; color:#111; padding:10px 0 18px; border-bottom:2px solid #18345b; }
+      .topbar h1 { color:#111; }
+      .eyebrow, .subtitle, .last-update { color:#444; }
+      .brand-mark, .topbar-actions, .filters-panel, .portfolio-toolbar .search-box, .pagination, .footer-note { display:none !important; }
+      .page { max-width:none; padding:14px 0; }
+      .panel, .chart-card, .table-card, .kpi-card { box-shadow:none; break-inside:avoid; }
+      .charts-grid, .tables-grid { grid-template-columns:repeat(2,minmax(0,1fr)); }
+      .table-wrap { overflow:visible; }
+      table { min-width:0; font-size:9px; }
+      th, td { padding:6px; }
+      .portfolio-table { min-width:0; }
+      .chart-wrap { height:220px; }
+      button { display:none !important; }
+    }
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <div class="topbar-inner">
+      <div>
+        <div class="brand-line">
+          <div class="brand-mark" aria-hidden="true">DP</div>
+          <div>
+            <p class="eyebrow">Gestão • Indicadores • Performance</p>
+            <h1>Dashboard Executivo de Projetos</h1>
+            <p class="subtitle">Visão consolidada da carteira, prazos e distribuição das demandas.</p>
+          </div>
+        </div>
+      </div>
+      <div class="topbar-actions">
+        <span id="ultimaAtualizacao" class="last-update">Aguardando carregamento dos dados…</span>
+        <button class="btn btn-secondary" type="button" onclick="carregarDashboard()" aria-label="Atualizar dados do dashboard">↻ Atualizar dados</button>
+      </div>
+    </div>
+  </header>
+
+  <main class="page" id="conteudoDashboard">
+    <div id="mensagemStatus" class="status-message" role="status" aria-live="polite"></div>
+
+    <section class="panel filters-panel" aria-labelledby="tituloFiltros">
+      <div class="filters-head">
+        <div class="filters-title"><span class="filter-icon" aria-hidden="true">☷</span><span id="tituloFiltros">Filtros do painel</span></div>
+        <span class="neutral-text" style="font-size:11px">Selecione os critérios para refinar a análise</span>
+      </div>
+      <div class="filters-grid">
+        <div class="field"><label for="filtroAno">Ano de entrada</label><select id="filtroAno"><option value="">Todos os anos</option></select></div>
+        <div class="field"><label for="filtroMes">Mês de entrada</label><select id="filtroMes"><option value="">Todos os meses</option></select></div>
+        <div class="field"><label for="filtroResponsavel">Responsável</label><select id="filtroResponsavel"><option value="">Todos os responsáveis</option></select></div>
+        <div class="field"><label for="filtroTipo">Tipo de demanda</label><select id="filtroTipo"><option value="">Todos os tipos</option></select></div>
+        <div class="field"><label for="filtroStatus">Status</label><select id="filtroStatus"><option value="">Todos os status</option></select></div>
+      </div>
+      <div class="filter-actions">
+        <button class="btn btn-primary" type="button" onclick="aplicarFiltros()">⌕ Aplicar filtros</button>
+        <button class="btn btn-secondary" type="button" onclick="limparFiltros()">Limpar filtros</button>
+        <button class="btn btn-export" type="button" onclick="exportarCSV()">↓ Exportar CSV</button>
+        <button class="btn btn-print" type="button" onclick="window.print()">▤ Exportar PDF</button>
+        <span id="resumoFiltros" class="filter-summary">Carregando carteira…</span>
+      </div>
+    </section>
+
+    <section aria-labelledby="tituloIndicadores">
+      <div class="section-heading"><div><h2 id="tituloIndicadores">Indicadores principais</h2><p>Resumo executivo da carteira selecionada</p></div></div>
+      <div class="kpi-grid">
+        <article class="kpi-card accent-blue"><div class="kpi-top"><span class="kpi-label">Projetos ativos</span><span class="kpi-symbol">◷</span></div><div id="kpiAtivos" class="kpi-value">—</div><div class="kpi-foot">Demandas ainda em andamento</div></article>
+        <article class="kpi-card accent-green"><div class="kpi-top"><span class="kpi-label">Projetos encerrados</span><span class="kpi-symbol">✓</span></div><div id="kpiEncerrados" class="kpi-value">—</div><div class="kpi-foot">Demandas concluídas ou finalizadas</div></article>
+        <article class="kpi-card accent-cyan"><div class="kpi-top"><span class="kpi-label">SLA de 30 dias</span><span class="kpi-symbol">◎</span></div><div id="kpiSla" class="kpi-value">—</div><div id="kpiSlaNota" class="kpi-foot">Indicador informado pela fonte</div></article>
+        <article class="kpi-card accent-navy"><div class="kpi-top"><span class="kpi-label">TME</span><span class="kpi-symbol">◴</span></div><div id="kpiTempo" class="kpi-value">—</div><div class="kpi-foot">Tempo médio de encerramento</div></article>
+        <article class="kpi-card accent-amber"><div class="kpi-top"><span class="kpi-label">Backlog acima de 30 dias</span><span class="kpi-symbol">!</span></div><div id="kpi30" class="kpi-value">—</div><div class="kpi-foot">Projetos abertos há mais de 30 dias</div></article>
+        <article class="kpi-card accent-red"><div class="kpi-top"><span class="kpi-label">Backlog acima de 90 dias</span><span class="kpi-symbol">⚑</span></div><div id="kpi90" class="kpi-value">—</div><div class="kpi-foot">Projetos abertos há mais de 90 dias</div></article>
+        <article class="kpi-card accent-blue"><div class="kpi-top"><span class="kpi-label">Projeto aberto mais antigo</span><span class="kpi-symbol">⌁</span></div><div id="kpiMaior" class="kpi-value">—</div><div class="kpi-foot">Maior tempo em aberto</div></article>
+        <article class="kpi-card accent-cyan"><div class="kpi-top"><span class="kpi-label">Média de dias em aberto</span><span class="kpi-symbol">≋</span></div><div id="kpiMedia" class="kpi-value">—</div><div class="kpi-foot">Média entre os projetos ativos</div></article>
+      </div>
+    </section>
+
+    <section aria-labelledby="tituloGraficos">
+      <div class="section-heading"><div><h2 id="tituloGraficos">Análise da carteira</h2><p>Volume, distribuição e envelhecimento das demandas</p></div></div>
+      <div class="charts-grid">
+        <article class="chart-card"><div class="card-heading"><div><h3>Entradas x encerramentos</h3><p>Movimentação mensal de projetos</p></div><span class="chart-tag">EVOLUÇÃO</span></div><div class="chart-wrap"><canvas id="graficoMensal" aria-label="Gráfico de entradas e encerramentos por mês"></canvas></div><div id="vazioMensal" class="chart-empty">Sem dados mensais para apresentar.</div></article>
+        <article class="chart-card"><div class="card-heading"><div><h3>Projetos por responsável</h3><p>Distribuição de demandas por responsável</p></div><span class="chart-tag">RANKING</span></div><div class="chart-wrap"><canvas id="graficoResponsavel" aria-label="Gráfico de projetos por responsável"></canvas></div><div id="vazioResponsavel" class="chart-empty">Sem dados de responsáveis para apresentar.</div></article>
+        <article class="chart-card"><div class="card-heading"><div><h3>Projetos por tipo</h3><p>Participação de cada categoria na carteira</p></div><span class="chart-tag">COMPOSIÇÃO</span></div><div class="chart-wrap"><canvas id="graficoTipo" aria-label="Gráfico de projetos por tipo"></canvas></div><div id="vazioTipo" class="chart-empty">Sem dados de tipos para apresentar.</div></article>
+        <article class="chart-card"><div class="card-heading"><div><h3>Aging da carteira</h3><p>Projetos agrupados por tempo em aberto</p></div><span class="chart-tag">FAIXA DE DIAS</span></div><div class="chart-wrap"><canvas id="graficoAging" aria-label="Gráfico de aging da carteira"></canvas></div><div id="vazioAging" class="chart-empty">Sem dados de aging para apresentar.</div></article>
+      </div>
+    </section>
+
+    <section aria-labelledby="tituloTop10">
+      <div class="section-heading"><div><h2 id="tituloTop10">Pontos de atenção</h2><p>Projetos que merecem acompanhamento prioritário</p></div></div>
+      <div class="tables-grid">
+        <article class="table-card"><div class="card-heading"><div><h3>10 abertos mais antigos</h3><p>Ordenados pelo maior tempo em aberto</p></div></div><div class="table-wrap"><table><thead><tr><th>Projeto</th><th>Responsável</th><th>Dias aberto</th><th>Dias vencidos</th></tr></thead><tbody id="tbodyAntigos"><tr><td colspan="4" class="empty-row">Aguardando dados…</td></tr></tbody></table></div></article>
+        <article class="table-card"><div class="card-heading"><div><h3>10 mais vencidos</h3><p>Prioridade pelo maior atraso informado</p></div></div><div class="table-wrap"><table><thead><tr><th>Projeto</th><th>Responsável</th><th>Dias vencidos</th></tr></thead><tbody id="tbodyVencidos"><tr><td colspan="3" class="empty-row">Aguardando dados…</td></tr></tbody></table></div></article>
+      </div>
+    </section>
+
+    <section class="table-card portfolio-card" aria-labelledby="tituloCarteira">
+      <div class="portfolio-toolbar"><div><h3 id="tituloCarteira">Carteira completa</h3><p>Consulte os projetos retornados pela fonte de dados e pesquise por qualquer informação da tabela.</p></div><div class="search-box"><span class="search-icon" aria-hidden="true">⌕</span><input id="pesquisaProjeto" class="search-input" type="search" placeholder="Pesquisar projeto, ID, responsável…" autocomplete="off" aria-label="Pesquisar na carteira completa"></div></div>
+      <div class="table-wrap"><table class="portfolio-table"><thead><tr><th>ID</th><th>Projeto</th><th>Status</th><th>Responsável</th><th>Tipo</th><th>Fase</th><th>Dias</th><th>Dias vencidos</th></tr></thead><tbody id="tbodyProjetos"><tr><td colspan="8" class="empty-row">Aguardando dados…</td></tr></tbody></table></div>
+      <div class="table-footer"><span id="contadorTabela">Nenhum projeto carregado</span><div class="pagination"><button id="paginaAnterior" type="button" aria-label="Página anterior" onclick="mudarPagina(-1)" disabled>‹</button><span id="indicadorPagina" class="page-indicator">Página 1</span><button id="proximaPagina" type="button" aria-label="Próxima página" onclick="mudarPagina(1)" disabled>›</button></div></div>
+    </section>
+
+    <p class="footer-note">Dashboard Executivo de Projetos • Os indicadores refletem os dados retornados pela fonte conectada.</p>
+  </main>
+
+  <script>
+    'use strict';
+
+    const META_DIAS = 30;
+    const ITENS_POR_PAGINA = 25;
+    const MESES = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+    const PALETA = ['#2474d2','#15a9c7','#16845b','#f0b429','#7c62d6','#e56b5d','#376da8','#55a6a1','#9a6b3f','#8795a9'];
+
+    let dadosOriginais = {};
+    let todosProjetos = [];
+    let projetosFiltrados = [];
+    let graficos = {};
+    let paginaAtual = 1;
+    let filtrosAplicados = false;
+
+    const $ = (id) => document.getElementById(id);
+    const normalizarChave = (valor) => String(valor ?? '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z0-9]/g, '');
+
+    function obterCampo(objeto, aliases, padrao = undefined) {
+      if (!objeto || typeof objeto !== 'object') return padrao;
+      const mapa = new Map(Object.keys(objeto).map(chave => [normalizarChave(chave), objeto[chave]]));
+      for (const alias of aliases) {
+        const chave = normalizarChave(alias);
+        if (mapa.has(chave) && mapa.get(chave) !== null && mapa.get(chave) !== undefined && mapa.get(chave) !== '') return mapa.get(chave);
+      }
+      return padrao;
+    }
+
+    function numero(valor, padrao = 0) {
+      if (typeof valor === 'number' && Number.isFinite(valor)) return valor;
+      if (valor === null || valor === undefined || valor === '') return padrao;
+      const texto = String(valor).trim().replace(/\s/g, '').replace(/R\$/gi, '').replace(/%$/, '');
+      let convertido;
+      if (/^-?\d{1,3}(\.\d{3})+(,\d+)?$/.test(texto)) convertido = Number(texto.replace(/\./g, '').replace(',', '.'));
+      else convertido = Number(texto.replace(',', '.'));
+      return Number.isFinite(convertido) ? convertido : padrao;
+    }
+
+    function dataValida(valor) {
+      if (valor instanceof Date && !Number.isNaN(valor.getTime())) return valor;
+      if (valor === null || valor === undefined || valor === '') return null;
+      if (typeof valor === 'number') {
+        const data = valor > 100000000000 ? new Date(valor) : valor > 20000 && valor < 100000 ? new Date(Date.UTC(1899, 11, 30) + valor * 86400000) : null;
+        return data && !Number.isNaN(data.getTime()) ? data : null;
+      }
+      const texto = String(valor).trim();
+      const br = texto.match(/^(\d{1,2})[\/-](\d{1,2})[\/-](\d{2,4})/);
+      if (br) {
+        let ano = Number(br[3]);
+        if (ano < 100) ano += ano < 50 ? 2000 : 1900;
+        const data = new Date(ano, Number(br[2]) - 1, Number(br[1]));
+        return Number.isNaN(data.getTime()) ? null : data;
+      }
+      const data = new Date(texto);
+      return Number.isNaN(data.getTime()) ? null : data;
+    }
+
+    function diasEntre(inicio, fim) {
+      if (!inicio || !fim) return null;
+      const a = Date.UTC(inicio.getFullYear(), inicio.getMonth(), inicio.getDate());
+      const b = Date.UTC(fim.getFullYear(), fim.getMonth(), fim.getDate());
+      return Math.max(0, Math.floor((b - a) / 86400000));
+    }
+
+    function projetoEncerrado(status) {
+      const s = normalizarChave(status);
+      return ['encerrado','encerrada','concluido','concluida','finalizado','finalizada','fechado','fechada','cancelado','cancelada'].some(palavra => s.includes(palavra));
+    }
+
+    function normalizarProjeto(linha) {
+      const nome = String(obterCampo(linha, ['projeto','nome do projeto','nome projeto','nomeprojeto','demanda','descricao do projeto','descrição','titulo','título'], 'Projeto sem nome'));
+      const status = String(obterCampo(linha, ['status','situação','situacao','status do projeto','statusprojeto'], 'Não informado'));
+      const responsavel = String(obterCampo(linha, ['responsável','responsavel','dono','owner','analista responsável','analista', 'proprietário', 'proprietario'], 'Não informado'));
+      const tipo = String(obterCampo(linha, ['tipo','tipo de demanda','tipodemanda','categoria'], 'Não informado'));
+      const fase = String(obterCampo(linha, ['fase','etapa','fase atual', 'fase do projeto'], '—'));
+      const id = String(obterCampo(linha, ['id','id projeto','codigo','código','número','numero','nº','chave'], '—'));
+      const dataEntrada = dataValida(obterCampo(linha, ['data de entrada','data entrada','data de abertura','data abertura','data de criação','data criacao','data solicitação','data solicitacao','data início','data inicio','criado em','createdat','abertura','entrada']));
+      const dataFechamento = dataValida(obterCampo(linha, ['data de encerramento','data encerramento','data de conclusão','data conclusao','data fechamento','data fechamento','data fim','encerrado em','fechado em']));
+      const encerrado = projetoEncerrado(status);
+      const diasInformados = obterCampo(linha, ['dias aberto','dias em aberto','dias','idade do projeto','aging','tempo aberto','dias decorrido','dias decorridos']);
+      let dias = diasInformados !== undefined ? Math.max(0, numero(diasInformados)) : null;
+      if (dias === null && dataEntrada) dias = diasEntre(dataEntrada, dataFechamento || new Date());
+      const vencidoInformado = obterCampo(linha, ['dias vencidos','dias vencido','vencido','dias de atraso','atraso em dias','atraso']);
+      let vencido = vencidoInformado !== undefined ? Math.max(0, numero(vencidoInformado)) : null;
+      const slaInformado = obterCampo(linha, ['sla','dentro do sla','dentro prazo','no prazo','aderente sla','sla30']);
+      return {
+        original: linha,
+        id, nome, status, responsavel, tipo, fase, dataEntrada, dataFechamento,
+        ano: dataEntrada ? String(dataEntrada.getFullYear()) : '',
+        mes: dataEntrada ? String(dataEntrada.getMonth() + 1) : '',
+        encerrado,
+        dias,
+        vencido,
+        sla: interpretarBoolSla(slaInformado),
+        busca: `${id} ${nome} ${status} ${responsavel} ${tipo} ${fase}`.toLocaleLowerCase('pt-BR')
+      };
+    }
+
+    function interpretarBoolSla(valor) {
+      if (valor === undefined || valor === null || valor === '') return null;
+      if (typeof valor === 'boolean') return valor;
+      if (typeof valor === 'number') return valor > 0;
+      const texto = normalizarChave(valor);
+      if (['sim','yes','true','dentro','noprazo','aderente','conforme','ok'].includes(texto)) return true;
+      if (['nao','no','false','fora','foradoprazo','naoaderente','atrasado'].includes(texto)) return false;
+      return null;
+    }
+
+    function listaProjetosDaResposta(dados) {
+      const possiveis = ['projetos','carteira','todosProjetos','detalhamento','listaProjetos','dadosProjetos','registros','demandas'];
+      for (const chave of possiveis) {
+        const valor = obterCampo(dados, [chave]);
+        if (Array.isArray(valor)) return valor;
+      }
+      return [];
+    }
+
+    function exibirMensagem(texto, tipo = 'info') {
+      const el = $('mensagemStatus');
+      el.textContent = texto;
+      el.className = `status-message show ${tipo}`;
+    }
+
+    function ocultarMensagem() {
+      const el = $('mensagemStatus');
+      el.textContent = '';
+      el.className = 'status-message';
+    }
+
+    function carregarDashboard() {
+      const area = $('conteudoDashboard');
+      area.classList.add('loading');
+      ocultarMensagem();
+      $('ultimaAtualizacao').textContent = 'Atualizando dados…';
+
+      if (typeof google === 'undefined' || !google.script || !google.script.run) {
+        area.classList.remove('loading');
+        $('ultimaAtualizacao').textContent = 'Ambiente de visualização local';
+        exibirMensagem('A integração google.script.run não está disponível. Abra este HTML pelo Web App do Google Apps Script para carregar os dados da planilha.', 'error');
+        return;
+      }
+
+      google.script.run
+        .withSuccessHandler(function (resposta) {
+          area.classList.remove('loading');
+          dadosOriginais = resposta && typeof resposta === 'object' ? resposta : {};
+          todosProjetos = listaProjetosDaResposta(dadosOriginais).map(normalizarProjeto);
+          preencherFiltros();
+          aplicarFiltros(false);
+          $('ultimaAtualizacao').textContent = `Atualizado em ${new Date().toLocaleString('pt-BR')}`;
+          if (!todosProjetos.length) {
+            exibirMensagem('Os indicadores podem ser exibidos conforme os campos retornados pelo servidor, mas a carteira completa depende do servidor retornar um array com todos os projetos.', 'info');
+          }
+        })
+        .withFailureHandler(function (erro) {
+          area.classList.remove('loading');
+          $('ultimaAtualizacao').textContent = 'Falha na atualização';
+          exibirMensagem(`Não foi possível carregar os dados. ${erro && erro.message ? erro.message : 'Verifique a função no Google Apps Script.'}`, 'error');
+          console.error('Erro ao carregar dashboard:', erro);
+        })
+        .getDashboardDataExecutivo(); // AQUI ESTÁ A CHAMADA DA FUNÇÃO CORRETA
+    }
+
+    function preencherSelect(id, valores, rotuloPadrao, ordenacao = 'texto') {
+      const select = $(id);
+      const valorAtual = select.value;
+      const limpo = [...new Set(valores.filter(v => v !== null && v !== undefined && String(v).trim() !== '').map(String))];
+      limpo.sort((a, b) => ordenacao === 'numero' ? Number(b) - Number(a) : a.localeCompare(b, 'pt-BR', {sensitivity:'base'}));
+      select.innerHTML = '';
+      const opcaoInicial = document.createElement('option');
+      opcaoInicial.value = '';
+      opcaoInicial.textContent = rotuloPadrao;
+      select.appendChild(opcaoInicial);
+      limpo.forEach(valor => {
+        const opcao = document.createElement('option');
+        opcao.value = valor;
+        opcao.textContent = id === 'filtroMes' ? (MESES[Number(valor) - 1] || valor) : valor;
+        select.appendChild(opcao);
+      });
+      if (limpo.includes(valorAtual)) select.value = valorAtual;
+    }
+
+    function preencherFiltros() {
+      preencherSelect('filtroAno', todosProjetos.map(p => p.ano), 'Todos os anos', 'numero');
+      preencherSelect('filtroMes', todosProjetos.map(p => p.mes), 'Todos os meses', 'numero');
+      preencherSelect('filtroResponsavel', todosProjetos.map(p => p.responsavel), 'Todos os responsáveis');
+      preencherSelect('filtroTipo', todosProjetos.map(p => p.tipo), 'Todos os tipos');
+      preencherSelect('filtroStatus', todosProjetos.map(p => p.status), 'Todos os status');
+    }
+
+    function filtrosAtuais() {
+      return {
+        ano: $('filtroAno').value,
+        mes: $('filtroMes').value,
+        responsavel: $('filtroResponsavel').value,
+        tipo: $('filtroTipo').value,
+        status: $('filtroStatus').value
+      };
+    }
+
+    function aplicarFiltros(redefinirPagina = true) {
+      const f = filtrosAtuais();
+      filtrosAplicados = Object.values(f).some(Boolean);
+      projetosFiltrados = todosProjetos.filter(p => {
+        if (f.ano && p.ano !== f.ano) return false;
+        if (f.mes && p.mes !== f.mes) return false;
+        if (f.responsavel && p.responsavel !== f.responsavel) return false;
+        if (f.tipo && p.tipo !== f.tipo) return false;
+        if (f.status && p.status !== f.status) return false;
+        return true;
+      });
+      if (redefinirPagina) paginaAtual = 1;
+      atualizarResumoFiltros();
+      renderizarIndicadores();
+      renderizarGraficos();
+      renderizarTop10();
+      renderizarTabela();
+    }
+
+    function limparFiltros() {
+      ['filtroAno','filtroMes','filtroResponsavel','filtroTipo','filtroStatus'].forEach(id => $(id).value = '');
+      $('pesquisaProjeto').value = '';
+      aplicarFiltros();
+    }
+
+    function atualizarResumoFiltros() {
+      const qtd = projetosFiltrados.length;
+      const total = todosProjetos.length;
+      $('resumoFiltros').textContent = total ? `${qtd.toLocaleString('pt-BR')} de ${total.toLocaleString('pt-BR')} projetos` : 'A carteira detalhada não foi retornada pelo servidor';
+    }
+
+    function calcularMetricas(lista) {
+      const ativos = lista.filter(p => !p.encerrado);
+      const encerrados = lista.filter(p => p.encerrado);
+      const diasAtivos = ativos.map(p => p.dias).filter(v => v !== null && Number.isFinite(v));
+      const diasEncerrados = encerrados.map(p => p.dias).filter(v => v !== null && Number.isFinite(v));
+      const slaConhecido = lista.filter(p => p.sla !== null);
+      const projetosComDias = lista.filter(p => p.dias !== null && Number.isFinite(p.dias));
+      const sla = slaConhecido.length
+        ? (slaConhecido.filter(p => p.sla).length / slaConhecido.length) * 100
+        : (projetosComDias.length ? (projetosComDias.filter(p => p.dias <= META_DIAS).length / projetosComDias.length) * 100 : null);
+      const diasProjetos = lista.map(p => p.dias).filter(v => v !== null && Number.isFinite(v));
+      return {
+        ativos: ativos.length,
+        encerrados: encerrados.length,
+        sla,
+        tempoMedio: diasEncerrados.length ? media(diasEncerrados) : null,
+        backlog30: ativos.filter(p => p.dias !== null && p.dias > 30).length,
+        backlog90: ativos.filter(p => p.dias !== null && p.dias > 90).length,
+        maiorProjeto: diasAtivos.length ? Math.max(...diasAtivos) : null,
+        mediaDiasAbertos: diasAtivos.length ? media(diasAtivos) : null,
+        mediaCarteira: diasProjetos.length ? media(diasProjetos) : null
+      };
+    }
+
+    function media(valores) { return valores.length ? valores.reduce((a,b) => a + b, 0) / valores.length : null; }
+    function formatarNumero(valor, casas = 0) {
+      if (valor === null || valor === undefined || !Number.isFinite(Number(valor))) return '—';
+      return Number(valor).toLocaleString('pt-BR', {minimumFractionDigits:casas, maximumFractionDigits:casas});
+    }
+    function valorBackend(chaves) { return obterCampo(dadosOriginais, chaves); }
+
+    function renderizarIndicadores() {
+      const m = calcularMetricas(projetosFiltrados);
+      const semFiltro = !filtrosAplicados;
+      const usar = (chaves, calculado) => semFiltro && valorBackend(chaves) !== undefined ? valorBackend(chaves) : calculado;
+      $('kpiAtivos').textContent = formatarNumero(numero(usar(['ativos','projetos ativos','total ativos'], m.ativos)));
+      $('kpiEncerrados').textContent = formatarNumero(numero(usar(['encerrados','projetos encerrados','total encerrados'], m.encerrados)));
+      const slaFonte = usar(['sla','sla30','sla 30 dias','percentual sla'], m.sla);
+      $('kpiSla').textContent = slaFonte === null || slaFonte === undefined || slaFonte === '' ? '—' : `${formatarNumero(numero(slaFonte), 1)}%`;
+      $('kpiSlaNota').textContent = (!semFiltro && !projetosFiltrados.some(p => p.sla !== null)) ? 'Estimativa com base na regra de 30 dias' : 'Indicador informado pela fonte';
+      const tempo = usar(['tempoMedio','tempo medio','tme'], m.tempoMedio);
+      $('kpiTempo').textContent = tempo === null || tempo === undefined ? '—' : `${formatarNumero(numero(tempo), 1)} dias`;
+      $('kpi30').textContent = formatarNumero(numero(usar(['backlog30','backlog 30','backlog acima de 30 dias'], m.backlog30)));
+      $('kpi90').textContent = formatarNumero(numero(usar(['backlog90','backlog 90','backlog acima de 90 dias'], m.backlog90)));
+      const maior = usar(['maiorProjeto','maior projeto','maior projeto aberto'], m.maiorProjeto);
+      $('kpiMaior').textContent = maior === null || maior === undefined ? '—' : `${formatarNumero(numero(maior))} dias`;
+      const mediaDias = usar(['mediaDiasAbertos','média dias abertos','media dias abertos'], m.mediaDiasAbertos);
+      $('kpiMedia').textContent = mediaDias === null || mediaDias === undefined ? '—' : `${formatarNumero(numero(mediaDias), 1)} dias`;
+    }
+
+    function contarPor(lista, chave) {
+      const mapa = new Map();
+      lista.forEach(p => {
+        const valor = String(p[chave] || 'Não informado');
+        mapa.set(valor, (mapa.get(valor) || 0) + 1);
+      });
+      return [...mapa.entries()].map(([nome, quantidade]) => ({nome, quantidade})).sort((a,b) => b.quantidade - a.quantidade);
+    }
+
+    function obterMensal() {
+      const candidatos = valorBackend(['mensal','entradasEncerramentos','evolucaoMensal','dadosMensais','movimentacaoMensal']);
+      if (Array.isArray(candidatos) && candidatos.length) {
+        return candidatos.map(item => ({
+          mes: String(obterCampo(item, ['mes','mês','label','periodo','período'], '')),
+          entradas: numero(obterCampo(item, ['entradas','entrada','novos','abertos'], 0)),
+          encerramentos: numero(obterCampo(item, ['encerramentos','encerrados','fechamentos','concluidos'], 0))
+        }));
+      }
+      const temDatas = todosProjetos.some(p => p.dataEntrada || p.dataFechamento);
+      if (!temDatas) return [];
+      const agora = new Date();
+      const meses = [];
+      for (let deslocamento = 11; deslocamento >= 0; deslocamento--) {
+        const data = new Date(agora.getFullYear(), agora.getMonth() - deslocamento, 1);
+        const chave = `${data.getFullYear()}-${data.getMonth()}`;
+        meses.push({chave, mes: `${MESES[data.getMonth()].slice(0,3)}/${String(data.getFullYear()).slice(-2)}`, entradas:0, encerramentos:0});
+      }
+      const lookup = new Map(meses.map(m => [m.chave,m]));
+      projetosFiltrados.forEach(p => {
+        if (p.dataEntrada) {
+          const item = lookup.get(`${p.dataEntrada.getFullYear()}-${p.dataEntrada.getMonth()}`);
+          if (item) item.entradas++;
+        }
+        if (p.dataFechamento) {
+          const item = lookup.get(`${p.dataFechamento.getFullYear()}-${p.dataFechamento.getMonth()}`);
+          if (item) item.encerramentos++;
+        }
+      });
+      return meses.map(({mes,entradas,encerramentos}) => ({mes,entradas,encerramentos}));
+    }
+
+    function obterRankingResponsaveis() {
+      if (!filtrosAplicados) {
+        const ranking = valorBackend(['ranking','rankingResponsaveis','projetosPorResponsavel']);
+        if (Array.isArray(ranking) && ranking.length) return ranking.map(x => ({nome:String(obterCampo(x,['nome','responsavel','responsável','label'],'Não informado')), quantidade:numero(obterCampo(x,['quantidade','total','projetos','valor'],0))}));
+      }
+      return contarPor(projetosFiltrados, 'responsavel');
+    }
+
+    function obterDadosTipo() {
+      if (!filtrosAplicados) {
+        const tipo = valorBackend(['tipoDemanda','projetosPorTipo','distribuicaoTipo']);
+        if (tipo && typeof tipo === 'object' && !Array.isArray(tipo)) return Object.entries(tipo).map(([nome, valor]) => ({nome, quantidade:numero(valor)})).filter(x => x.quantidade >= 0);
+      }
+      return contarPor(projetosFiltrados, 'tipo');
+    }
+
+    function obterAging() {
+      if (!filtrosAplicados) {
+        const aging = valorBackend(['aging','faixasAging']);
+        if (aging && typeof aging === 'object') {
+          const faixas = [
+            {nome:'0–30 dias', chaves:['faixa30','0-30','ate30','até30']},
+            {nome:'31–60 dias', chaves:['faixa60','31-60']},
+            {nome:'61–90 dias', chaves:['faixa90','61-90']},
+            {nome:'Acima de 90', chaves:['acima90','>90','mais90']}
+          ];
+          const valores = faixas.map(f => numero(obterCampo(aging, f.chaves, 0)));
+          if (valores.some(v => v > 0)) return faixas.map((f,i) => ({nome:f.nome, quantidade:valores[i]}));
+        }
+      }
+      const ativos = projetosFiltrados.filter(p => !p.encerrado && p.dias !== null);
+      return [
+        {nome:'0–30 dias', quantidade:ativos.filter(p => p.dias <= 30).length},
+        {nome:'31–60 dias', quantidade:ativos.filter(p => p.dias > 30 && p.dias <= 60).length},
+        {nome:'61–90 dias', quantidade:ativos.filter(p => p.dias > 60 && p.dias <= 90).length},
+        {nome:'Acima de 90', quantidade:ativos.filter(p => p.dias > 90).length}
+      ];
+    }
+
+    function criarGrafico(id, config, vazioId, temDados) {
+      if (graficos[id]) { graficos[id].destroy(); delete graficos[id]; }
+      const canvas = $(id);
+      const vazio = $(vazioId);
+      if (!temDados || typeof Chart === 'undefined') {
+        canvas.style.display = 'none';
+        vazio.classList.add('show');
+        if (typeof Chart === 'undefined') vazio.textContent = 'Não foi possível carregar a biblioteca de gráficos.';
+        return;
+      }
+      vazio.classList.remove('show');
+      canvas.style.display = 'block';
+      graficos[id] = new Chart(canvas, config);
+    }
+
+    const opcoesBase = {
+      responsive:true,
+      maintainAspectRatio:false,
+      animation:{duration:350},
+      plugins:{
+        legend:{labels:{color:'#596b84', usePointStyle:true, boxWidth:8, boxHeight:8, padding:18, font:{family:'Segoe UI, Arial, sans-serif',size:11}}},
+        tooltip:{backgroundColor:'#10213f', padding:11, titleFont:{size:12,weight:'bold'}, bodyFont:{size:11}, cornerRadius:8}
+      }
+    };
+
+    function renderizarGraficos() {
+      const mensal = obterMensal();
+      criarGrafico('graficoMensal', {
+        type:'line', data:{labels:mensal.map(x=>x.mes), datasets:[
+          {label:'Entradas', data:mensal.map(x=>x.entradas), borderColor:'#2474d2', backgroundColor:'rgba(36,116,210,.12)', fill:true, tension:.3, pointRadius:3, pointHoverRadius:5},
+          {label:'Encerramentos', data:mensal.map(x=>x.encerramentos), borderColor:'#16845b', backgroundColor:'rgba(22,132,91,.08)', fill:true, tension:.3, pointRadius:3, pointHoverRadius:5}
+        ]}, options:{...opcoesBase, scales:{x:{grid:{display:false},ticks:{color:'#73839a',maxRotation:0}},y:{beginAtZero:true,grid:{color:'#edf1f6'},ticks:{precision:0,color:'#73839a'}}}}
+      }, 'vazioMensal', mensal.some(x=>x.entradas || x.encerramentos));
+
+      const ranking = obterRankingResponsaveis().slice(0,10);
+      criarGrafico('graficoResponsavel', {
+        type:'bar', data:{labels:ranking.map(x=>x.nome),datasets:[{label:'Projetos',data:ranking.map(x=>x.quantidade),backgroundColor:'#2474d2',borderRadius:6,maxBarThickness:28}]},
+        options:{...opcoesBase,indexAxis:'y',plugins:{...opcoesBase.plugins,legend:{display:false}},scales:{x:{beginAtZero:true,grid:{color:'#edf1f6'},ticks:{precision:0,color:'#73839a'}},y:{grid:{display:false},ticks:{color:'#596b84'}}}}
+      }, 'vazioResponsavel', ranking.some(x=>x.quantidade > 0));
+
+      const tipos = obterDadosTipo().filter(x=>x.quantidade > 0);
+      criarGrafico('graficoTipo', {
+        type:'doughnut', data:{labels:tipos.map(x=>x.nome),datasets:[{data:tipos.map(x=>x.quantidade),backgroundColor:PALETA,borderColor:'#fff',borderWidth:3,hoverOffset:5}]},
+        options:{...opcoesBase,cutout:'66%',plugins:{...opcoesBase.plugins,legend:{position:'bottom',labels:{color:'#596b84',usePointStyle:true,boxWidth:8,boxHeight:8,padding:14,font:{size:11}}}}}
+      }, 'vazioTipo', tipos.length > 0);
+
+      const aging = obterAging();
+      criarGrafico('graficoAging', {
+        type:'bar', data:{labels:aging.map(x=>x.nome),datasets:[{label:'Projetos',data:aging.map(x=>x.quantidade),backgroundColor:['#16845b','#15a9c7','#f0b429','#c43e4c'],borderRadius:7,maxBarThickness:52}]},
+        options:{...opcoesBase,plugins:{...opcoesBase.plugins,legend:{display:false}},scales:{x:{grid:{display:false},ticks:{color:'#596b84'}},y:{beginAtZero:true,grid:{color:'#edf1f6'},ticks:{precision:0,color:'#73839a'}}}}
+      }, 'vazioAging', aging.some(x=>x.quantidade > 0));
+    }
+
+    function escaparHtml(valor) {
+      return String(valor ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+    }
+
+    function linhaVazia(colunas, texto = 'Nenhum registro encontrado para os filtros selecionados.') {
+      return `<tr><td class="empty-row" colspan="${colunas}">${escaparHtml(texto)}</td></tr>`;
+    }
+
+    function renderizarTop10() {
+      let antigos;
+      let vencidos;
+      if (todosProjetos.length) {
+        antigos = projetosFiltrados.filter(p => !p.encerrado && p.dias !== null).sort((a,b)=>b.dias-a.dias).slice(0,10);
+        vencidos = projetosFiltrados.filter(p => p.vencido !== null && p.vencido > 0).sort((a,b)=>b.vencido-a.vencido).slice(0,10);
+      } else {
+        const top = valorBackend(['top10','projetosAntigos','maisAntigos']);
+        const lista = Array.isArray(top) ? top.map(normalizarProjeto) : [];
+        antigos = [...lista].sort((a,b)=>(b.dias ?? 0)-(a.dias ?? 0)).slice(0,10);
+        vencidos = [...lista].filter(p=>(p.vencido ?? 0)>0).sort((a,b)=>(b.vencido ?? 0)-(a.vencido ?? 0)).slice(0,10);
+      }
+      $('tbodyAntigos').innerHTML = antigos.length ? antigos.map(p=>`<tr><td class="project-name">${escaparHtml(p.nome)}</td><td>${escaparHtml(p.responsavel)}</td><td class="number-cell">${formatarNumero(p.dias)}</td><td class="number-cell ${p.vencido > 0 ? 'danger-text' : ''}">${p.vencido === null ? '—' : formatarNumero(p.vencido)}</td></tr>`).join('') : linhaVazia(4);
+      $('tbodyVencidos').innerHTML = vencidos.length ? vencidos.map(p=>`<tr><td class="project-name">${escaparHtml(p.nome)}</td><td>${escaparHtml(p.responsavel)}</td><td class="number-cell danger-text">${p.vencido === null ? '—' : formatarNumero(p.vencido)}</td></tr>`).join('') : linhaVazia(3, 'Não há projetos com dias vencidos informados.');
+    }
+
+    function classeStatus(projeto) {
+      if (projeto.encerrado) return 'closed';
+      if (projeto.vencido !== null && projeto.vencido > 0) return 'late';
+      const status = normalizarChave(projeto.status);
+      if (status.includes('pendente') || status.includes('aguardando')) return 'pending';
+      return 'active';
+    }
+
+    function renderizarTabela() {
+      const textoBusca = $('pesquisaProjeto').value.trim().toLocaleLowerCase('pt-BR');
+      const lista = projetosFiltrados.filter(p => !textoBusca || p.busca.includes(textoBusca));
+      const totalPaginas = Math.max(1, Math.ceil(lista.length / ITENS_POR_PAGINA));
+      paginaAtual = Math.min(paginaAtual, totalPaginas);
+      const inicio = (paginaAtual - 1) * ITENS_POR_PAGINA;
+      const pagina = lista.slice(inicio, inicio + ITENS_POR_PAGINA);
+      $('tbodyProjetos').innerHTML = pagina.length ? pagina.map(p=>`<tr>
+        <td class="number-cell">${escaparHtml(p.id)}</td>
+        <td class="project-name">${escaparHtml(p.nome)}</td>
+        <td><span class="status-pill ${classeStatus(p)}">${escaparHtml(p.status)}</span></td>
+        <td>${escaparHtml(p.responsavel)}</td>
+        <td>${escaparHtml(p.tipo)}</td>
+        <td>${escaparHtml(p.fase)}</td>
+        <td class="number-cell">${p.dias === null ? '—' : formatarNumero(p.dias)}</td>
+        <td class="number-cell ${(p.vencido ?? 0)>0 ? 'danger-text' : ''}">${p.vencido === null ? '—' : formatarNumero(p.vencido)}</td>
+      </tr>`).join('') : linhaVazia(8, todosProjetos.length ? 'Nenhum projeto corresponde à pesquisa e aos filtros.' : 'O servidor ainda não retornou a lista completa de projetos.');
+      $('contadorTabela').textContent = lista.length ? `Exibindo ${inicio + 1}–${Math.min(inicio + ITENS_POR_PAGINA, lista.length)} de ${lista.length.toLocaleString('pt-BR')} projetos` : 'Nenhum projeto encontrado';
+      $('indicadorPagina').textContent = `Página ${paginaAtual} de ${totalPaginas}`;
+      $('paginaAnterior').disabled = paginaAtual <= 1;
+      $('proximaPagina').disabled = paginaAtual >= totalPaginas;
+    }
+
+    function mudarPagina(direcao) {
+      paginaAtual += direcao;
+      renderizarTabela();
+      $('tituloCarteira').scrollIntoView({behavior:'smooth',block:'start'});
+    }
+
+    function exportarCSV() {
+      if (!projetosFiltrados.length) {
+        exibirMensagem('Não há projetos carregados para exportar. Confirme se getDashboardData() retorna a propriedade "projetos" com a carteira completa.', 'info');
+        return;
+      }
+      const cabecalho = ['ID','Projeto','Status','Responsável','Tipo','Fase','Data de entrada','Data de encerramento','Dias','Dias vencidos'];
+      const linhas = projetosFiltrados.map(p => [p.id,p.nome,p.status,p.responsavel,p.tipo,p.fase,formatarData(p.dataEntrada),formatarData(p.dataFechamento),p.dias ?? '',p.vencido ?? '']);
+      const csv = '\uFEFF' + [cabecalho, ...linhas].map(linha => linha.map(campo => `"${String(campo ?? '').replace(/"/g,'""')}"`).join(';')).join('\r\n');
+      const blob = new Blob([csv], {type:'text/csv;charset=utf-8;'});
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `carteira_projetos_${new Date().toISOString().slice(0,10)}.csv`;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      URL.revokeObjectURL(url);
+    }
+
+    function formatarData(data) {
+      return data instanceof Date && !Number.isNaN(data.getTime()) ? data.toLocaleDateString('pt-BR') : '';
+    }
+
+    $('pesquisaProjeto').addEventListener('input', function () {
+      paginaAtual = 1;
+      renderizarTabela();
+    });
+
+    ['filtroAno','filtroMes','filtroResponsavel','filtroTipo','filtroStatus'].forEach(id => {
+      $(id).addEventListener('change', () => aplicarFiltros());
+    });
+
+    // Inicia uma única vez, tanto no Web App quanto em visualização local.
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', carregarDashboard, { once: true });
+    } else {
+      carregarDashboard();
+    }
+  </script>
+</body>
+</html>
